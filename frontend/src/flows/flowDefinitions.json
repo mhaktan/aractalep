@@ -1,0 +1,192 @@
+[
+  {
+    "id": "flow-VehicleRequest-approval",
+    "name": "VehicleRequest Approval Flow",
+    "description": "Auto-generated approval flow for VehicleRequest. Customize email templates and add conditions as needed.",
+    "resourceName": "VehicleRequest",
+    "enabled": true,
+    "variables": [
+      {
+        "name": "assigneeEmail",
+        "type": "string",
+        "defaultValue": ""
+      },
+      {
+        "name": "creatorEmail",
+        "type": "string",
+        "defaultValue": ""
+      },
+      {
+        "name": "departmentEmails",
+        "type": "string",
+        "defaultValue": ""
+      },
+      {
+        "name": "formLink",
+        "type": "string",
+        "defaultValue": ""
+      }
+    ],
+    "nodes": [
+      {
+        "id": "VehicleRequest-approval-trigger",
+        "type": "trigger",
+        "label": "On VehicleRequest Submit",
+        "position": {
+          "x": 300,
+          "y": 50
+        },
+        "trigger": {
+          "type": "on-field-change",
+          "resourceName": "VehicleRequest",
+          "fieldName": "status"
+        }
+      },
+      {
+        "id": "VehicleRequest-approval-condition",
+        "type": "condition",
+        "label": "Status = PendingManagerApproval?",
+        "position": {
+          "x": 300,
+          "y": 160
+        },
+        "condition": {
+          "logic": "and",
+          "rules": [
+            {
+              "field": "triggerData.status",
+              "operator": "equals",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "VehicleRequest-approval-approval",
+        "type": "approval",
+        "label": "VehicleRequest Approval",
+        "position": {
+          "x": 300,
+          "y": 280
+        },
+        "approval": {
+          "steps": [
+            {
+              "name": "Yönetici Onayı",
+              "assigneeType": "role",
+              "assigneeValue": "Manager",
+              "actions": [
+                {
+                  "label": "Onayla",
+                  "type": "approve"
+                },
+                {
+                  "label": "Revize Et",
+                  "type": "revise",
+                  "requiredFields": [
+                    "revisionNote"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Filo Sorumlusu Onayı",
+              "assigneeType": "role",
+              "assigneeValue": "FleetManager",
+              "actions": [
+                {
+                  "label": "Onayla ve Araç Ata",
+                  "type": "approve"
+                },
+                {
+                  "label": "Revize Et",
+                  "type": "revise",
+                  "requiredFields": [
+                    "revisionNote"
+                  ]
+                }
+              ]
+            }
+          ],
+          "trackRevisionHistory": true,
+          "onCompleteEvent": "VehicleRequest-approval-completed"
+        }
+      },
+      {
+        "id": "VehicleRequest-approval-email",
+        "type": "action",
+        "label": "Send Approval Email",
+        "position": {
+          "x": 300,
+          "y": 400
+        },
+        "action": {
+          "type": "send-email",
+          "config": {
+            "to": "{{assigneeEmail}}",
+            "subject": "{{triggerData.requestNo}} — Araç Talebi Onayınızı Bekliyor",
+            "body": "<p>Sayın onaylayıcı,</p><p><strong>{{triggerData.requestNo}}</strong> numaralı araç talebi onayınızı beklemektedir.</p>",
+            "contentType": "html"
+          }
+        }
+      },
+      {
+        "id": "VehicleRequest-approval-completion-trigger",
+        "type": "trigger",
+        "label": "On VehicleRequest Approved",
+        "position": {
+          "x": 700,
+          "y": 50
+        },
+        "trigger": {
+          "type": "manual",
+          "resourceName": "VehicleRequest"
+        }
+      },
+      {
+        "id": "VehicleRequest-approval-completion-email",
+        "type": "action",
+        "label": "Send Completion Email",
+        "position": {
+          "x": 700,
+          "y": 160
+        },
+        "action": {
+          "type": "send-email",
+          "config": {
+            "to": "{{creatorEmail}}",
+            "cc": "{{departmentEmails}}",
+            "subject": "{{triggerData.formNo}} — Tum onaylar tamamlandi",
+            "body": "<p>{{triggerData.formNo}} numarali formun onay sureci tamamlanmistir.</p>",
+            "contentType": "html"
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "gen_1789739547234_1",
+        "sourceNodeId": "VehicleRequest-approval-trigger",
+        "targetNodeId": "VehicleRequest-approval-condition"
+      },
+      {
+        "id": "gen_1789739547234_2",
+        "sourceNodeId": "VehicleRequest-approval-condition",
+        "targetNodeId": "VehicleRequest-approval-approval",
+        "branch": "true"
+      },
+      {
+        "id": "gen_1789739547234_3",
+        "sourceNodeId": "VehicleRequest-approval-approval",
+        "targetNodeId": "VehicleRequest-approval-email"
+      },
+      {
+        "id": "gen_1789739547234_4",
+        "sourceNodeId": "VehicleRequest-approval-completion-trigger",
+        "targetNodeId": "VehicleRequest-approval-completion-email"
+      }
+    ],
+    "createdAt": "2026-09-18T13:52:27.234Z",
+    "updatedAt": "2026-09-18T13:52:27.234Z"
+  }
+]
